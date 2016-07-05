@@ -70,83 +70,6 @@ def scan_workdir(base):
     raise Exception("Unable to determine input type")
 
 
-def spreadsheet2dict(spreadFile):
-    """
-    Takes the filename of the spreadsheet, loads the data and organizes
-    it into a dictionary"""
-
-    spreadDict = {}
-    key2field = {}
-    for l, line in enumerate(open(spreadFile)):
-        sl = line.strip().split('\t')
-        if l == 0:
-            for k, key in enumerate(sl):
-                key2field[key] = k
-        else:
-            spreadDict[sl[key2field['analysis_id']]] = sl
-
-    return (spreadDict, key2field)
-
-
-def spreadsheet2RGdict(spreadFile, analysisID):
-    """Compiles a read group dictionary from the information
-    in the spreadFile for the given analysisID."""
-
-    sD, k2f = spreadsheet2dict(spreadFile)
-
-    try:
-        rec = sD[analysisID]
-    except KeyError:
-        raise Exception('Information for analysis ID %s could not be found in %s' % (analysisID, spreadFile))
-
-    ### build dictionary
-    RG_dict = { 'ID' : '%s:%s' % (rec[k2f['center_name']], analysisID),
-                'CN' : rec[k2f['center_name']],
-                'LB' : 'RNA-Seq:%s:%s' % (rec[k2f['center_name']], rec[k2f['lib_id']]),
-                'PL' : rec[k2f['platform']],
-                'PM' : rec[k2f['platform_model']],
-                'SM' : rec[k2f['specimen_id']],
-                'SI' : rec[k2f['submitted_sample_id']]}
-
-    files = []
-    if 'fastq_files' in k2f:
-        files = rec[k2f['fastq_files']].strip(' ').split(' ')
-
-    return (RG_dict, files)
-
-
-def xml2RGdict(xmlfile):
-
-    ### read xml in
-    root = etree.parse(xmlfile)
-    rtree = root.find('Result')
-
-    ### analysis_id
-    analysis_id = rtree.find('analysis_id').text
-    center = rtree.find('center_name').text
-    try:
-        date_string = rtree.find('analysis_xml/ANALYSIS_SET/ANALYSIS').attrib['analysis_date']
-    except KeyError:
-        date_string = rtree.find('run_xml/RUN_SET/RUN').attrib['run_date']
-    sample_id = rtree.find('sample_id').text
-    submitter_id = rtree.find('legacy_sample_id').text
-    library_id = rtree.find('experiment_xml/EXPERIMENT_SET/EXPERIMENT').attrib['alias']
-    platform = rtree.find('experiment_xml/EXPERIMENT_SET/EXPERIMENT/PLATFORM').getchildren()[0].tag
-    instrument = rtree.find('experiment_xml/EXPERIMENT_SET/EXPERIMENT/PLATFORM/*/INSTRUMENT_MODEL').text
-
-    ### build dictionary
-    RG_dict = { 'ID' : '%s:%s' % (center, analysis_id),
-                'CN' : center,
-                'DT' : date_string,
-                'LB' : 'RNA-Seq:%s:%s' % (center, library_id),
-                'PL' : platform,
-                'PM' : instrument,
-                'SM' : sample_id,
-                'SI' : submitter_id}
-
-    return RG_dict
-
-
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="ICGC RNA-Seq alignment wrapper for STAR alignments.", formatter_class=argparse.ArgumentDefaultsHelpFormatter, usage='%(prog)s [options]', add_help=False)
@@ -156,7 +79,6 @@ if __name__ == "__main__":
     optional = parser.add_argument_group("optional input parameters")
     optional.add_argument("--out", default="out.bam", help="Name of the output BAM file")
     optional.add_argument("--workDir", default="./", help="Work directory")
-    optional.add_argument("--metaDataTab", default=None, help="File containing metadata for the alignment header")
     optional.add_argument("--analysisID", default=None, help="Analysis ID to be considered in the metadata file")
     optional.add_argument("--keepJunctions", default=False, action='store_true', help="keeps the junction file as {--out}.junctions")
     optional.add_argument("--useTMP", default=None, help="environment variable that is used as prefix for temprary data")
@@ -184,7 +106,6 @@ if __name__ == "__main__":
     star.add_argument("--outSAMheaderHD", default=["@HD", "VN:1.4"], help="outSAMheaderHD")
     star.add_argument("--outSAMattrRGline", default=None, help="RG attribute line submitted to outSAMattrRGline")
     star.add_argument("--outSAMattrRGfile", default=None, help="File containing the RG attribute line submitted to outSAMattrRGline")
-    star.add_argument("--outSAMattrRGxml", default=None, help="XML-File in TCGA format to compile RG attribute line")
     star.add_argument("--limitGenomeGenerateRAM", type=int, default=31000000000, help="Memmory to rebuild index")
     star.add_argument("--alignIntronMin", type=int, default=21, help="alignIntronMin")
     star.add_argument("--scoreDelOpen", type=int, default=-2, help="scoreDelOpen")
@@ -199,14 +120,6 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    ### some sanity checks on command line parameters
-    if args.metaDataTab is not None:
-        if not os.path.exists(args.metaDataTab):
-            raise Exception("File provided via --metaDataTab does not exist\nFile: %s" % args.metaDataTab)
-        if args.analysisID is None:
-            raise Exception("When providing information in a metadata file, a value for --analysisID is required")
-    if args.outSAMattrRGxml is not None and not os.path.exists(args.outSAMattrRGxml):
-        raise Exception("File provided via --outSAMattrRGxml does not exist\nFile: %s" % args.outSAMattrRGxml)
     if args.outSAMattrRGfile is not None and not os.path.exists(args.outSAMattrRGfile):
         raise Exception("File provided via --outSAMattrRGfile does not exist\nFile: %s" % args.outSAMattrRGfile)
 
@@ -230,12 +143,7 @@ if __name__ == "__main__":
 
     ### process read group information
     files = []
-    if args.metaDataTab is not None:
-        (RG_dict, files_tmp) = spreadsheet2RGdict(args.metaDataTab, args.analysisID)
-        files.extend(files_tmp)
-    elif args.outSAMattrRGxml is not None:
-        RG_dict = xml2RGdict(args.outSAMattrRGxml)
-    elif args.outSAMattrRGline is not None:
+    if args.outSAMattrRGline is not None:
         RG_dict = dict([(x.split(':', 1)[0], x.split(':', 1)[1]) for x in args.outSAMattrRGline.split()])
     elif args.outSAMattrRGfile is not None:
         _fh = open(args.outSAMattrRGfile, 'r')

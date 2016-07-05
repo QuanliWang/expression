@@ -101,12 +101,11 @@ if __name__ == "__main__":
     parser.add_argument('--input_file', required=True, help='path to input file')
 
     star = parser.add_argument_group("star pipeline")
-    star.add_argument('--genome_dir', default='/home/ubuntu/SCRATCH/star_genome_d1_vd1_gtfv22/', required=True,
+    star.add_argument('--genome_dir', default=None, required=True,
                      help='star index directory')
-    star.add_argument('--star_pipeline', default='/home/ubuntu/expression/icgc_rnaseq/star_align.py',
+    star.add_argument('--star_pipeline', default='/home/ubuntu/expression/star_align.py',
                       help='path to star pipeline')
-    star.add_argument('--genome_fasta_file', type=str, help='path to reference genome', required=True,
-                default='/home/ubuntu/SCRATCH/GRCh38.d1.vd1.fa')
+    star.add_argument('--genome_fasta_file', type=str, help='path to reference genome', required=True, default=None)
     star.add_argument('--quantMode', type=str, default="TranscriptomeSAM", help='enable transcriptome mapping in STAR')
 
     cufflinks = parser.add_argument_group("cufflinks pipeline")
@@ -140,4 +139,3 @@ if __name__ == "__main__":
         if not os.path.isdir(fastq_dir):
             os.mkdir(fastq_dir)
         run_pipeline(args, workdir, analysis_id, fastq_dir, logger)
-        #pipelineUtil.remove_dir(workdir)
