@@ -137,4 +137,6 @@ if __name__ == "__main__":
         fastq_dir = os.path.join(workdir, '%s_fastq_files' %analysis_id)
         if not os.path.isdir(fastq_dir):
             os.mkdir(fastq_dir)
+	if not os.path.isdir(fastq_dir):
+            raise Exception("Cannot create fastq_dir")
         run_pipeline(args, workdir, analysis_id, fastq_dir, logger)
