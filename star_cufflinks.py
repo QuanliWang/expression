@@ -80,9 +80,9 @@ def decompress(filename, workdir):
     """ Unpack fastq files """
 
     if filename.endswith(".tar"):
-        cmd = ['tar', 'xvf', filename, '-C', workdir]
+        cmd = ['tar', '-xvf', filename, '-C', workdir]
     elif filename.endswith(".gz"):
-        cmd = ['tar', 'xzvf', filename, '-C', workdir]
+        cmd = ['tar', '-xzvf', filename, '-C', workdir]
     else:
         raise Exception('Unknown input file extension for file %s' % filename)
     pipelineUtil.log_function_time("tar", filename, cmd)
