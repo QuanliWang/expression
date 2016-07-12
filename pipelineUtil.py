@@ -34,7 +34,7 @@ def run_command2(cmd, logger=None):
 def run_command(cmd):
     """ Run a subprocess command """
 
-    exit_code = subprocess.check_call(cmd, shell=true)
+    exit_code = subprocess.check_call(cmd, shell=True)
     return exit_code
 
 def log_function_time(fn, analysis_id, cmd, logger=None):
