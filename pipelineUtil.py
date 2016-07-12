@@ -12,7 +12,7 @@ def retrieve_data(analysis_id, cghub_key, output_dir, logger=None):
 
         #os.system("gtdownload -v -c %s -p %s %s" %(cghub_key, output_dir, analysis_id))
 
-def run_command(cmd, logger=None):
+def run_command2(cmd, logger=None):
     """ Run a subprocess command """
 
     #stdoutdata, stderrdata = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
@@ -31,11 +31,17 @@ def run_command(cmd, logger=None):
 
     return exit_code
 
+def run_command(cmd):
+    """ Run a subprocess command """
+
+    exit_code = subprocess.check_call(cmd, shell=true)
+    return exit_code
+
 def log_function_time(fn, analysis_id, cmd, logger=None):
     """ Log the time taken by a command to the logger """
 
     start_time = time.time()
-    exit_code = run_command(cmd, logger)
+    exit_code = run_command(cmd)
     end_time = time.time()
 
     if logger != None:
