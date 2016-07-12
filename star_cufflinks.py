@@ -93,24 +93,23 @@ if __name__ == "__main__":
     parser.add_argument('--analysis_id', required=True, default=None, type=str, help='analysis ids')
     parser.add_argument('--gtf', required=True, type=str, help='genome annotation file')
     parser.add_argument('--p', type=str, default=1, help='number of threads')
-    parser.add_argument('--picard', type=str, default='/home/ubuntu/bin/picard-tools-1.136/picard.jar',
+    parser.add_argument('--picard', type=str, default='/home/crunch/bin/picard-tools-1.136/picard.jar',
                         help='path to picard binary')
     parser.add_argument('--ref_flat', required=True, type=str, default=None, help='path to refFlat file')
-    parser.add_argument('--fastqc_path', type=str, default='/home/ubuntu/bin/FastQC/fastqc', help='path to fastqc binary')
+    parser.add_argument('--fastqc_path', type=str, default=None, help='path to fastqc binary')
     parser.add_argument('--output_dir', type=str, default=os.getcwd())
     parser.add_argument('--input_file', required=True, help='path to input file')
 
     star = parser.add_argument_group("star pipeline")
     star.add_argument('--genome_dir', default=None, required=True,
                      help='star index directory')
-    star.add_argument('--star_pipeline', default='/home/ubuntu/expression/star_align.py',
-                      help='path to star pipeline')
+    star.add_argument('--star_pipeline', default=None, help='path to star pipeline')
     star.add_argument('--genome_fasta_file', type=str, help='path to reference genome', required=True, default=None)
     star.add_argument('--quantMode', type=str, default="TranscriptomeSAM", help='enable transcriptome mapping in STAR')
 
     cufflinks = parser.add_argument_group("cufflinks pipeline")
     cufflinks.add_argument('--cufflinks_pipeline', type=str,
-                            default='/home/ubuntu/expression/compute_expression.py')
+                            default=None)
     args = parser.parse_args()
 
     analysis_id = args.analysis_id

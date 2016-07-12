@@ -29,8 +29,7 @@ if __name__ == "__main__":
 
     required = parser.add_argument_group('required')
     required.add_argument('--bam', type=str, default=None, required=True, help="input bam file")
-    required.add_argument('--gtf', type=str, default='/home/ubuntu/SCRATCH/gencode.v22.annotation.gtf',
-                        required=True, help="genome annotation file")
+    required.add_argument('--gtf', type=str, default=None, required=True, help="genome annotation file")
     required.add_argument('--analysis_id', type=str, default=None, required=True, help='analysis id')
 
 
